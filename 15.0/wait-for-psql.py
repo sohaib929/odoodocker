@@ -11,7 +11,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--db_port', required=True)
     arg_parser.add_argument('--db_user', required=True)
     arg_parser.add_argument('--db_password', required=True)
-    arg_parser.add_argument('--timeout', type=int, default=5)
+    arg_parser.add_argument('--timeout', type=int, default=6)
 
     args = arg_parser.parse_args()
 
