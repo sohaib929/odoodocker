@@ -1,17 +1,16 @@
-# FROM ubuntu:jammy
+# Use the latest Ubuntu 24.10 base image
 FROM ubuntu:24.10
 MAINTAINER Odoo S.A. <info@odoo.com>
 
 SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
 
-# Generate locale C.UTF-8 for postgres and general locale data
+# Generate locale C.UTF-8 for PostgreSQL and general locale data
 ENV LANG en_US.UTF-8
 
 # Retrieve the target architecture to install the correct wkhtmltopdf package
 ARG TARGETARCH
 
-# Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
-
+# Install required system dependencies, wkhtmltopdf, and other tools
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
@@ -23,6 +22,8 @@ RUN apt-get update && \
         libssl-dev \
         node-less \
         npm \
+        python3 \
+        python3-dev \
         python3-magic \
         python3-num2words \
         python3-odf \
@@ -38,6 +39,7 @@ RUN apt-get update && \
         python3-watchdog \
         python3-xlrd \
         python3-xlwt \
+        python3-wheel \
         xz-utils && \
     if [ -z "${TARGETARCH}" ]; then \
         TARGETARCH="$(dpkg --print-architecture)"; \
@@ -53,7 +55,7 @@ RUN apt-get update && \
     && apt-get install -y --no-install-recommends ./wkhtmltox.deb \
     && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
 
-# install latest postgresql-client
+# Install the latest PostgreSQL client
 RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ lunar-pgdg main' > /etc/apt/sources.list.d/pgdg.list \
     && GNUPGHOME="$(mktemp -d)" \
     && export GNUPGHOME \
@@ -67,7 +69,7 @@ RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ lunar-pgdg main' > /etc/a
     && rm -f /etc/apt/sources.list.d/pgdg.list \
     && rm -rf /var/lib/apt/lists/*
 
-# Install rtlcss (on Debian buster)
+# Install rtlcss (for right-to-left support)
 RUN npm install -g rtlcss@2.6.2
 
 # Install Odoo
@@ -84,7 +86,7 @@ RUN curl -o odoo.deb -sSL http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/od
 COPY ./entrypoint.sh /
 COPY ./odoo.conf /etc/odoo/
 
-# Set permissions and Mount /var/lib/odoo to allow restoring filestore and /mnt/extra-addons for users addons
+# Set permissions and mount /var/lib/odoo to allow restoring filestore and /mnt/extra-addons for users addons
 RUN chown odoo /etc/odoo/odoo.conf \
     && mkdir -p /mnt/extra-addons \
     && chown -R odoo /mnt/extra-addons
