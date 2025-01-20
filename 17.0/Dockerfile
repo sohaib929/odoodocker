@@ -66,6 +66,16 @@ RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jammy-pgdg main' > /etc/a
     && rm -f /etc/apt/sources.list.d/pgdg.list \
     && rm -rf /var/lib/apt/lists/*
 
+# Upgrade Python libraries to secure versions
+RUN pip3 install --no-cache-dir --upgrade \
+    pillow==10.3.0 \
+    werkzeug==3.0.3 \
+    gevent==23.9.1 \
+    cryptography==42.0.0 \
+    setuptools==70.0.0 \
+    urllib3==1.26.17 \
+    certifi==2023.7.22
+
 # Install rtlcss (on Debian buster)
 RUN npm install -g rtlcss@2.6.2
 
