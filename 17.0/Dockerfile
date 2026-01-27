@@ -10,7 +10,6 @@ ENV LANG en_US.UTF-8
 ARG TARGETARCH
 
 # Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
-
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
@@ -78,6 +77,21 @@ RUN curl -o odoo.deb -sSL http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/od
     && apt-get update \
     && apt-get -y install --no-install-recommends ./odoo.deb \
     && rm -rf /var/lib/apt/lists/* odoo.deb
+
+# --------------------------------------------------------------------
+# Fix: prevent pip/apt OpenSSL mismatch that breaks pyOpenSSL in Odoo
+# - Ensure Ubuntu Jammy provides the OpenSSL runtime (libssl3)
+# - Ensure python OpenSSL bindings come from apt (python3-openssl + python3-cryptography)
+# - Remove any pip-installed pyOpenSSL/cryptography that may override dist-packages
+# --------------------------------------------------------------------
+RUN python3 -m pip uninstall -y pyOpenSSL cryptography || true \
+    && apt-get update \
+    && apt-get install --reinstall -y --no-install-recommends \
+        libssl3 \
+        ca-certificates \
+        python3-cryptography \
+        python3-openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy entrypoint script and Odoo configuration file
 COPY ./entrypoint.sh /
